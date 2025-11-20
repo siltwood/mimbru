@@ -341,6 +341,41 @@ export default function CreatureScreen() {
 				{/* Urgent Warnings */}
 				<WarningBanner warnings={urgentWarnings} />
 
+				{/* Movement Testing Controls (Dev Only) */}
+				{__DEV__ && (
+					<View className="bg-blue-50 p-3 rounded-lg mb-3 border border-blue-200">
+						<Text className="text-center text-xs font-bold text-blue-700 mb-2">
+							🎮 Test Movement
+						</Text>
+						<View className="space-y-2">
+							{/* Up button */}
+							<View className="flex-row justify-center">
+								<Button onPress={() => testDirection('up')} variant="outline" className="px-4 py-1 border-blue-300" size="sm">
+									<Text className="text-blue-600 text-xs">⬆️</Text>
+								</Button>
+							</View>
+							{/* Left, Idle, Right buttons */}
+							<View className="flex-row justify-center space-x-2">
+								<Button onPress={() => testDirection('left')} variant="outline" className="px-4 py-1 border-blue-300" size="sm">
+									<Text className="text-blue-600 text-xs">⬅️</Text>
+								</Button>
+								<Button onPress={() => testDirection('idle')} variant="outline" className="px-4 py-1 border-gray-300" size="sm">
+									<Text className="text-gray-600 text-xs">⏹️</Text>
+								</Button>
+								<Button onPress={() => testDirection('right')} variant="outline" className="px-4 py-1 border-blue-300" size="sm">
+									<Text className="text-blue-600 text-xs">➡️</Text>
+								</Button>
+							</View>
+							{/* Down button */}
+							<View className="flex-row justify-center">
+								<Button onPress={() => testDirection('down')} variant="outline" className="px-4 py-1 border-blue-300" size="sm">
+									<Text className="text-blue-600 text-xs">⬇️</Text>
+								</Button>
+							</View>
+						</View>
+					</View>
+				)}
+
 				{/* Pet Display */}
 				<PetDisplay
 					creature={creature}
@@ -385,7 +420,6 @@ export default function CreatureScreen() {
 					onAdjustStat={adjustStat}
 					onAdjustFood={adjustFood}
 					onResetStats={resetAllStats}
-				onTestDirection={testDirection}
 				/>
 
 				{/* Stats Info */}
