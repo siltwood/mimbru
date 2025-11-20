@@ -30,6 +30,7 @@ import {
 export default function CreatureScreen() {
 	const { session, signOut } = useAuth();
 	const [floatingText, setFloatingText] = useState<string | null>(null);
+	const [forceAnimation, setForceAnimation] = useState<'up' | 'down' | 'left' | 'right' | 'idle' | null>(null);
 
 	// Custom hooks
 	const { creature, setCreature, loading, fetchOrCreateCreature } = useCreature(session?.user.id, signOut);
@@ -298,6 +299,12 @@ export default function CreatureScreen() {
 		}
 	};
 
+	const testDirection = (direction: 'up' | 'down' | 'left' | 'right' | 'idle') => {
+		setForceAnimation(direction);
+		// Auto-reset after 3 seconds so it goes back to normal behavior
+		setTimeout(() => setForceAnimation(null), 3000);
+	};
+
 	// Loading state
 	if (loading) {
 		return (
@@ -320,7 +327,11 @@ export default function CreatureScreen() {
 	}
 
 	const urgentWarnings = getUrgentWarnings(creature);
-	const animationState = getAnimationState(creature);
+	const baseAnimationState = getAnimationState(creature);
+	// Override with forced animation for testing, or use calculated state
+	const animationState = forceAnimation
+		? (forceAnimation === 'idle' ? 'idle' : `walking_${forceAnimation}` as any)
+		: baseAnimationState;
 
 	return (
 		<ScrollView className="flex-1 bg-background">
@@ -374,6 +385,7 @@ export default function CreatureScreen() {
 					onAdjustStat={adjustStat}
 					onAdjustFood={adjustFood}
 					onResetStats={resetAllStats}
+				onTestDirection={testDirection}
 				/>
 
 				{/* Stats Info */}

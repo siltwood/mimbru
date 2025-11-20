@@ -20,6 +20,7 @@ interface DevControlsProps {
 	onAdjustStat: (stat: 'health' | 'happiness' | 'cleanliness' | 'hunger', delta: number) => void;
 	onAdjustFood: (delta: number) => void;
 	onResetStats: () => void;
+	onTestDirection?: (direction: 'up' | 'down' | 'left' | 'right' | 'idle') => void;
 }
 
 export function DevControls({
@@ -29,6 +30,7 @@ export function DevControls({
 	onAdjustStat,
 	onAdjustFood,
 	onResetStats,
+	onTestDirection,
 }: DevControlsProps) {
 	if (!__DEV__) return null;
 
@@ -147,6 +149,41 @@ export function DevControls({
 					</Button>
 				</View>
 			</View>
+
+			{/* Movement Testing */}
+			{onTestDirection && (
+				<View className="mt-4 pt-4 border-t border-purple-300">
+					<Text className="text-center text-sm font-bold text-purple-700 mb-2">
+						🎮 Test Movement Directions
+					</Text>
+					<View className="space-y-2">
+						{/* Up button */}
+						<View className="flex-row justify-center">
+							<Button onPress={() => onTestDirection('up')} variant="outline" className="px-6 py-2 border-blue-300">
+								<Text className="text-blue-600">⬆️ Up</Text>
+							</Button>
+						</View>
+						{/* Left, Idle, Right buttons */}
+						<View className="flex-row justify-center space-x-2">
+							<Button onPress={() => onTestDirection('left')} variant="outline" className="px-4 py-2 border-blue-300">
+								<Text className="text-blue-600">⬅️ Left</Text>
+							</Button>
+							<Button onPress={() => onTestDirection('idle')} variant="outline" className="px-4 py-2 border-gray-300">
+								<Text className="text-gray-600">⏹️ Stop</Text>
+							</Button>
+							<Button onPress={() => onTestDirection('right')} variant="outline" className="px-4 py-2 border-blue-300">
+								<Text className="text-blue-600">➡️ Right</Text>
+							</Button>
+						</View>
+						{/* Down button */}
+						<View className="flex-row justify-center">
+							<Button onPress={() => onTestDirection('down')} variant="outline" className="px-6 py-2 border-blue-300">
+								<Text className="text-blue-600">⬇️ Down</Text>
+							</Button>
+						</View>
+					</View>
+				</View>
+			)}
 
 			{/* Reset Button */}
 			<Button onPress={onResetStats} variant="outline" className="mt-4 border-purple-400">
