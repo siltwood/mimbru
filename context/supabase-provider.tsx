@@ -14,6 +14,10 @@ import { CreatureDegradation } from "@/lib/creature-degradation";
 
 SplashScreen.preventAutoHideAsync();
 
+// 🚧 TESTING MODE: Set to false to re-enable auth
+const TESTING_MODE = true;
+const TEST_USER_ID = 'c2ff23dd-518c-4004-ba7b-617dace033ab';
+
 type AuthState = {
 	initialized: boolean;
 	session: Session | null;
@@ -90,6 +94,24 @@ export function AuthProvider({ children }: PropsWithChildren) {
 	};
 
 	useEffect(() => {
+		if (TESTING_MODE) {
+			// Create mock session for testing
+			const mockSession = {
+				user: {
+					id: TEST_USER_ID,
+					email: 'test@test.com',
+					aud: 'authenticated',
+					role: 'authenticated',
+				},
+				access_token: 'mock-access-token',
+				refresh_token: 'mock-refresh-token',
+			} as Session;
+
+			setSession(mockSession);
+			setInitialized(true);
+			return;
+		}
+
 		supabase.auth.getSession().then(({ data: { session } }) => {
 			setSession(session);
 		});
@@ -116,7 +138,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 		if (initialized) {
 			SplashScreen.hideAsync();
 			if (session) {
-				router.replace("/");
+				router.replace("/creature");
 			} else {
 				router.replace("/welcome");
 			}

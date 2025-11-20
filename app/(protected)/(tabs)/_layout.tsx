@@ -26,13 +26,7 @@ export default function TabsLayout() {
 			}}
 			initialRouteName="creature"
 		>
-			<Tabs.Screen 
-				name="index"
-				options={{
-					href: null, // Hide from tab bar
-				}}
-			/>
-			<Tabs.Screen 
+			<Tabs.Screen
 				name="creature" 
 				options={{ 
 					title: "🐾 Pet",

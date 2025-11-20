@@ -6,12 +6,20 @@ import { useAuth } from "@/context/supabase-provider";
 import { Text } from "@/components/ui/text";
 import { H1, H2, Muted } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
+import {
+	HABIT_COMPLETION_EFFECTS,
+	getFoodReward,
+	getStreakEmoji,
+	getStreakBonus,
+} from "@/lib/constants/pet-constants";
 
 type Habit = {
 	id: string;
 	user_id: string;
 	name: string;
-	streak: number;
+	current_streak: number;
+	longest_streak: number;
+	total_completions: number;
 	last_completed: string | null;
 	created_at: string;
 	updated_at: string;
@@ -62,7 +70,9 @@ export default function HabitsScreen() {
 				.insert([{
 					user_id: session?.user.id,
 					name: newHabitName.trim(),
-					streak: 0,
+					current_streak: 0,
+					longest_streak: 0,
+					total_completions: 0,
 					created_at: now,
 					updated_at: now
 				}])
@@ -97,22 +107,27 @@ export default function HabitsScreen() {
 			if (habit.last_completed) {
 				const yesterday = new Date();
 				yesterday.setDate(yesterday.getDate() - 1);
-				
+
 				if (lastCompleted === yesterday.toDateString()) {
 					// Consecutive day
-					newStreak = habit.streak + 1;
+					newStreak = habit.current_streak + 1;
 				} else {
 					// Streak broken, reset to 1
 					newStreak = 1;
 				}
 			}
 
+			const newLongestStreak = Math.max(habit.longest_streak, newStreak);
+			const newTotalCompletions = habit.total_completions + 1;
+
 			// Update habit
 			const { error } = await supabase
 				.from("habits")
 				.update({
 					last_completed: now,
-					streak: newStreak,
+					current_streak: newStreak,
+					longest_streak: newLongestStreak,
+					total_completions: newTotalCompletions,
 					updated_at: now
 				})
 				.eq("id", habit.id);
@@ -127,30 +142,54 @@ export default function HabitsScreen() {
 				.single();
 
 			if (creature) {
-				const streakBonus = Math.min(newStreak, 10); // Bonus caps at 10
-				const newHappiness = Math.min(100, creature.happiness + 10 + streakBonus);
-				const newHealth = Math.min(100, creature.health + 5 + streakBonus);
+				const streakBonus = getStreakBonus(newStreak);
+				const newHappiness = Math.min(100, creature.happiness + HABIT_COMPLETION_EFFECTS.BASE_HAPPINESS + streakBonus);
+				const newHealth = Math.min(100, creature.health + HABIT_COMPLETION_EFFECTS.BASE_HEALTH + streakBonus);
+
+				// Award food for completing habits
+				const foodReward = getFoodReward(newStreak);
+				const newFoodCount = creature.food_count + foodReward;
+
+				let updates: any = {
+					happiness: newHappiness,
+					health: newHealth,
+					food_count: newFoodCount,
+					updated_at: now
+				};
+				
+				// If pet is passed out, revive it when completing habits
+				if (creature.is_dead) {
+					updates.is_dead = false;
+					updates.current_animation = "idle";
+					updates.health = Math.max(HABIT_COMPLETION_EFFECTS.REVIVAL_MIN_HEALTH, newHealth); // Ensure minimum health on revival
+				}
 
 				await supabase
 					.from("creatures")
-					.update({
-						happiness: newHappiness,
-						health: newHealth,
-						updated_at: now
-					})
+					.update(updates)
 					.eq("id", creature.id);
 			}
 
 			// Update local state
-			setHabits(prev => prev.map(h => 
-				h.id === habit.id 
-					? { ...h, last_completed: now, streak: newStreak }
+			setHabits(prev => prev.map(h =>
+				h.id === habit.id
+					? {
+						...h,
+						last_completed: now,
+						current_streak: newStreak,
+						longest_streak: newLongestStreak,
+						total_completions: newTotalCompletions
+					}
 					: h
 			));
 
+			// Enhanced completion message with food reward info
+			const foodReward = getFoodReward(newStreak);
+			const revivalMessage = creature?.is_dead ? "\n🌟 Your pet has been revived!" : "";
+			
 			Alert.alert(
 				"🎉 Habit Completed!",
-				`${habit.name} - Day ${newStreak} streak!`
+				`${habit.name} - Day ${newStreak} streak!\n🍎 +${foodReward} food for your pet!${revivalMessage}`
 			);
 
 		} catch (err) {
@@ -193,13 +232,7 @@ export default function HabitsScreen() {
 		return lastCompleted === today;
 	};
 
-	const getStreakEmoji = (streak: number) => {
-		if (streak >= 30) return "🏆";
-		if (streak >= 14) return "💎";
-		if (streak >= 7) return "🔥";
-		if (streak >= 3) return "✨";
-		return "🌱";
-	};
+	// Streak emoji helper is now imported from constants
 
 	if (loading) {
 		return (
@@ -262,9 +295,9 @@ export default function HabitsScreen() {
 									<View className="flex-1 mr-3">
 										<Text className="text-lg font-medium">{habit.name}</Text>
 										<View className="flex-row items-center mt-1">
-											<Text className="text-sm mr-2">{getStreakEmoji(habit.streak)}</Text>
+											<Text className="text-sm mr-2">{getStreakEmoji(habit.current_streak)}</Text>
 											<Text className="text-sm text-gray-600">
-												{habit.streak} day streak
+												{habit.current_streak} day streak
 											</Text>
 										</View>
 									</View>

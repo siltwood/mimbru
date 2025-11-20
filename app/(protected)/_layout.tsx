@@ -9,11 +9,14 @@ export const unstable_settings = {
 export default function ProtectedLayout() {
 	const { initialized, session } = useAuth();
 
-	if (!initialized) {
+	// 🚧 TESTING MODE: Set to false to re-enable auth
+	const TESTING_MODE = true;
+
+	if (!initialized && !TESTING_MODE) {
 		return null;
 	}
 
-	if (!session) {
+	if (!session && !TESTING_MODE) {
 		return <Redirect href="/welcome" />;
 	}
 

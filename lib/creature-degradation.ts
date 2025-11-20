@@ -1,4 +1,14 @@
 import { supabase } from "@/config/supabase";
+import {
+	TIME_INTERVALS,
+	DEGRADATION_THRESHOLDS,
+	COMPLETION_RATES,
+	COMPLETION_RATE_EFFECTS,
+	NEGLECT_PENALTIES,
+	HOURLY_DEGRADATION,
+	POOP_SYSTEM,
+	clampStat,
+} from "./constants/pet-constants";
 
 export class CreatureDegradation {
 	private static instance: CreatureDegradation;
@@ -18,10 +28,10 @@ export class CreatureDegradation {
 			clearInterval(this.interval);
 		}
 
-		// Run degradation every hour (in production, you might want this less frequent)
+		// Run degradation based on configured interval
 		this.interval = setInterval(() => {
 			this.degradeCreature(userId);
-		}, 60 * 60 * 1000); // 1 hour
+		}, TIME_INTERVALS.DEGRADATION_INTERVAL * 60 * 60 * 1000);
 
 		// Also run immediately
 		this.degradeCreature(userId);
@@ -90,64 +100,64 @@ export class CreatureDegradation {
 			let hungerChange = 0;
 
 			// Hunger degrades over time (faster if not fed)
-			if (hoursSinceFeeding > 6) {
-				hungerChange = -Math.min(10, hoursSinceFeeding - 6);
+			if (hoursSinceFeeding > DEGRADATION_THRESHOLDS.HOURS_SINCE_FEEDING) {
+				hungerChange = -Math.min(HOURLY_DEGRADATION.MAX_HUNGER_LOSS, hoursSinceFeeding - DEGRADATION_THRESHOLDS.HOURS_SINCE_FEEDING);
 			}
 
 			// Cleanliness degrades over time
-			if (hoursSinceCleaning > 12) {
-				cleanlinessChange = -Math.min(8, hoursSinceCleaning - 12);
+			if (hoursSinceCleaning > DEGRADATION_THRESHOLDS.HOURS_SINCE_CLEANING) {
+				cleanlinessChange = -Math.min(HOURLY_DEGRADATION.MAX_CLEANLINESS_LOSS, hoursSinceCleaning - DEGRADATION_THRESHOLDS.HOURS_SINCE_CLEANING);
 			}
 
 			// Health and happiness based on habit completion
 			if (totalHabits > 0) {
-				if (completionRate >= 0.8) {
+				if (completionRate >= COMPLETION_RATES.EXCELLENT) {
 					// Great habit completion - bonus stats
-					healthChange = 2;
-					happinessChange = 3;
-				} else if (completionRate >= 0.5) {
+					healthChange = COMPLETION_RATE_EFFECTS.EXCELLENT.HEALTH;
+					happinessChange = COMPLETION_RATE_EFFECTS.EXCELLENT.HAPPINESS;
+				} else if (completionRate >= COMPLETION_RATES.GOOD) {
 					// Decent completion - maintain stats
-					healthChange = 0;
-					happinessChange = 1;
-				} else if (completionRate >= 0.2) {
+					healthChange = COMPLETION_RATE_EFFECTS.GOOD.HEALTH;
+					happinessChange = COMPLETION_RATE_EFFECTS.GOOD.HAPPINESS;
+				} else if (completionRate >= COMPLETION_RATES.FAIR) {
 					// Poor completion - slight degradation
-					healthChange = -3;
-					happinessChange = -5;
+					healthChange = COMPLETION_RATE_EFFECTS.FAIR.HEALTH;
+					happinessChange = COMPLETION_RATE_EFFECTS.FAIR.HAPPINESS;
 				} else {
 					// Very poor completion - significant degradation
-					healthChange = -6;
-					happinessChange = -10;
+					healthChange = COMPLETION_RATE_EFFECTS.POOR.HEALTH;
+					happinessChange = COMPLETION_RATE_EFFECTS.POOR.HAPPINESS;
 				}
 			} else {
 				// No habits set - slight degradation
-				healthChange = -2;
-				happinessChange = -3;
+				healthChange = COMPLETION_RATE_EFFECTS.NO_HABITS.HEALTH;
+				happinessChange = COMPLETION_RATE_EFFECTS.NO_HABITS.HAPPINESS;
 			}
 
 			// Additional degradation if very neglected
-			if (creature.hunger < 30) {
-				healthChange -= 3;
-				happinessChange -= 5;
+			if (creature.hunger < DEGRADATION_THRESHOLDS.LOW_STAT) {
+				healthChange += NEGLECT_PENALTIES.LOW_HUNGER.HEALTH;
+				happinessChange += NEGLECT_PENALTIES.LOW_HUNGER.HAPPINESS;
 			}
 
-			if (creature.cleanliness < 30) {
-				healthChange -= 2;
-				happinessChange -= 3;
+			if (creature.cleanliness < DEGRADATION_THRESHOLDS.LOW_STAT) {
+				healthChange += NEGLECT_PENALTIES.LOW_CLEANLINESS.HEALTH;
+				happinessChange += NEGLECT_PENALTIES.LOW_CLEANLINESS.HAPPINESS;
 				// Increase poop count
 				await supabase
 					.from("creatures")
-					.update({ poop_count: Math.min(5, creature.poop_count + 1) })
+					.update({ poop_count: Math.min(POOP_SYSTEM.MAX_POOP_COUNT, creature.poop_count + 1) })
 					.eq("id", creature.id);
 			}
 
 			// Apply changes
-			const newHealth = Math.max(0, creature.health + healthChange);
-			const newHappiness = Math.max(0, creature.happiness + happinessChange);
-			const newCleanliness = Math.max(0, creature.cleanliness + cleanlinessChange);
-			const newHunger = Math.max(0, creature.hunger + hungerChange);
+			const newHealth = clampStat(creature.health + healthChange);
+			const newHappiness = clampStat(creature.happiness + happinessChange);
+			const newCleanliness = clampStat(creature.cleanliness + cleanlinessChange);
+			const newHunger = clampStat(creature.hunger + hungerChange);
 
-			// Check if creature should die
-			const shouldDie = newHealth <= 0 && newHappiness <= 0;
+			// Check if creature should pass out (health reaches 0)
+			const shouldDie = newHealth <= 0;
 
 			if (healthChange !== 0 || happinessChange !== 0 || cleanlinessChange !== 0 || hungerChange !== 0 || shouldDie) {
 				await supabase

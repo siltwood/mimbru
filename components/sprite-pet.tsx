@@ -61,6 +61,12 @@ export function SpritePet({
   useEffect(() => {
     if (!currentAnimation || currentAnimation.frames.length === 0) return;
     
+    // Don't animate frames when dead - stay on first frame
+    if (animationState === 'dead') {
+      setCurrentFrame(0);
+      return;
+    }
+    
     const interval = setInterval(() => {
       setCurrentFrame(prev => {
         if (currentAnimation.loop) {
@@ -157,7 +163,13 @@ export function SpritePet({
   
   // Determine which animation to use based on state and movement
   const getEffectiveAnimationState = (): AnimationState => {
-    if (animationState === 'dead' || animationState === 'sleeping' || animationState === 'eating' || animationState === 'happy' || animationState === 'sad') {
+    // For dead state, use walking_down animation (will be rotated 90 degrees)
+    if (animationState === 'dead') {
+      // Use walking_down frames but show first frame only (not animated)
+      return animations['walking_down'] ? 'walking_down' : 'idle';
+    }
+    
+    if (animationState === 'sleeping' || animationState === 'eating' || animationState === 'happy' || animationState === 'sad') {
       // Check if we have the specific animation, otherwise fall back to idle/walking
       if (animations[animationState]) {
         return animationState;
@@ -180,11 +192,13 @@ export function SpritePet({
   const effectiveAnimationState = getEffectiveAnimationState();
   const effectiveAnimation = animations[effectiveAnimationState];
   
-  // Animated style for position
+  // Animated style for position and rotation (for dead state)
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: positionX.value },
       { translateY: positionY.value },
+      // Rotate 90 degrees when dead (laying on side)
+      { rotate: animationState === 'dead' ? '90deg' : '0deg' },
     ],
   }));
   
