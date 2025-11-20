@@ -70,17 +70,6 @@ export function PetDisplay({ creature, animationState, onPetPress, floatingText 
 						require('@/assets/sprites/pet/walking/down9.png'),
 					], 12, true),
 					walking_left: createAnimation([
-						require('@/assets/sprites/pet/walking/left1.png'),
-						require('@/assets/sprites/pet/walking/left2.png'),
-						require('@/assets/sprites/pet/walking/left3.png'),
-						require('@/assets/sprites/pet/walking/left4.png'),
-						require('@/assets/sprites/pet/walking/left5.png'),
-						require('@/assets/sprites/pet/walking/left6.png'),
-						require('@/assets/sprites/pet/walking/left7.png'),
-						require('@/assets/sprites/pet/walking/left8.png'),
-						require('@/assets/sprites/pet/walking/left9.png'),
-					], 12, true),
-					walking_right: createAnimation([
 						require('@/assets/sprites/pet/walking/right1.png'),
 						require('@/assets/sprites/pet/walking/right2.png'),
 						require('@/assets/sprites/pet/walking/right3.png'),
@@ -90,6 +79,17 @@ export function PetDisplay({ creature, animationState, onPetPress, floatingText 
 						require('@/assets/sprites/pet/walking/right7.png'),
 						require('@/assets/sprites/pet/walking/right8.png'),
 						require('@/assets/sprites/pet/walking/right9.png'),
+					], 12, true),
+					walking_right: createAnimation([
+						require('@/assets/sprites/pet/walking/left1.png'),
+						require('@/assets/sprites/pet/walking/left2.png'),
+						require('@/assets/sprites/pet/walking/left3.png'),
+						require('@/assets/sprites/pet/walking/left4.png'),
+						require('@/assets/sprites/pet/walking/left5.png'),
+						require('@/assets/sprites/pet/walking/left6.png'),
+						require('@/assets/sprites/pet/walking/left7.png'),
+						require('@/assets/sprites/pet/walking/left8.png'),
+						require('@/assets/sprites/pet/walking/left9.png'),
 					], 12, true),
 					// Fallback to colored squares for other states until we add more sprites
 				}}
