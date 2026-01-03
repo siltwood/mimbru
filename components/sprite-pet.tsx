@@ -1,11 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Dimensions, Text } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withRepeat,
-  withSequence,
   runOnJS,
   Easing,
 } from 'react-native-reanimated';
@@ -16,9 +14,9 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 type AnimationState = 'idle' | 'walking_up' | 'walking_down' | 'walking_left' | 'walking_right' | 'happy' | 'sad' | 'eating' | 'sleeping' | 'dead';
 
 interface AnimationConfig {
-  frames: any[]; // Array of image sources (walking1, walking2, etc.)
-  frameRate: number; // FPS
-  loop: boolean; // Whether to loop the animation
+  frames: any[];
+  frameRate: number;
+  loop: boolean;
 }
 
 interface SpritePetProps {
@@ -31,117 +29,167 @@ interface SpritePetProps {
     width: number;
     height: number;
   };
+  forceMove?: 'up' | 'down' | 'left' | 'right' | 'center' | null;
 }
 
-export function SpritePet({ 
-  animationState, 
-  animations, 
+export function SpritePet({
+  animationState,
+  animations,
   scale = 2,
-  bounds = { x: 50, y: 100, width: screenWidth - 100, height: screenHeight - 300 }
+  bounds = { x: 50, y: 100, width: screenWidth - 100, height: screenHeight - 300 },
+  forceMove = null,
 }: SpritePetProps) {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [isMoving, setIsMoving] = useState(false);
   const [currentDirection, setCurrentDirection] = useState<'up' | 'down' | 'left' | 'right'>('down');
-  
-  // Position values
+
   const positionX = useSharedValue(bounds.width / 2);
   const positionY = useSharedValue(bounds.height / 2);
-  
-  // Get current animation configuration
-  const currentAnimation = animations[animationState];
-  
-  // Debug logging
-  useEffect(() => {
-    console.log('Current animation state:', animationState);
-    console.log('Available animations:', Object.keys(animations));
-    console.log('Current animation:', currentAnimation);
-  }, [animationState, currentAnimation]);
-  
-  // Frame animation
-  useEffect(() => {
-    if (!currentAnimation || currentAnimation.frames.length === 0) return;
-    
-    // Don't animate frames when dead - stay on first frame
+
+  // Determine which animation to use based on state and movement
+  const getEffectiveAnimationState = (): AnimationState => {
     if (animationState === 'dead') {
+      return animations['walking_down'] ? 'walking_down' : 'idle';
+    }
+
+    if (animationState === 'sleeping' || animationState === 'eating' || animationState === 'happy' || animationState === 'sad') {
+      if (animations[animationState]) {
+        return animationState;
+      }
+    }
+
+    if (isMoving) {
+      return `walking_${currentDirection}` as AnimationState;
+    }
+
+    // When idle, use walking_down as default (first frame will show)
+    if (!animations['idle'] && animations['walking_down']) {
+      return 'walking_down';
+    }
+
+    return 'idle';
+  };
+
+  const effectiveAnimationState = getEffectiveAnimationState();
+  const effectiveAnimation = animations[effectiveAnimationState];
+
+  // Frame animation - uses effectiveAnimation so it works when moving
+  useEffect(() => {
+    if (!effectiveAnimation || effectiveAnimation.frames.length === 0) return;
+
+    // Don't animate frames when dead or idle - stay on first frame
+    if (animationState === 'dead' || !isMoving) {
       setCurrentFrame(0);
       return;
     }
-    
+
     const interval = setInterval(() => {
       setCurrentFrame(prev => {
-        if (currentAnimation.loop) {
-          return (prev + 1) % currentAnimation.frames.length;
+        if (effectiveAnimation.loop) {
+          return (prev + 1) % effectiveAnimation.frames.length;
         } else {
-          return Math.min(prev + 1, currentAnimation.frames.length - 1);
+          return Math.min(prev + 1, effectiveAnimation.frames.length - 1);
         }
       });
-    }, 1000 / currentAnimation.frameRate);
-    
+    }, 1000 / effectiveAnimation.frameRate);
+
     return () => clearInterval(interval);
-  }, [currentAnimation, animationState]);
-  
-  // Reset frame when animation changes
+  }, [effectiveAnimation, animationState, isMoving]);
+
+  // Reset frame when direction changes
   useEffect(() => {
     setCurrentFrame(0);
-  }, [animationState]);
-  
-  // Random movement with direction detection and proper bounds
+  }, [currentDirection]);
+
+  // Force move in a specific direction (for testing)
   useEffect(() => {
-    if (animationState === 'sleeping' || animationState === 'dead') return;
-    
+    if (!forceMove) return;
+
+    const currentX = positionX.value;
+    const currentY = positionY.value;
+    const spriteSize = 32 * scale;
+    const padding = 8;
+    const safeWidth = bounds.width - spriteSize - (padding * 2);
+    const safeHeight = bounds.height - spriteSize - (padding * 2);
+
+    let newX = currentX;
+    let newY = currentY;
+    const moveDistance = 80; // Fixed distance for test
+
+    // Pick a target that's predominantly in the forced direction
+    switch (forceMove) {
+      case 'center':
+        newX = safeWidth / 2;
+        newY = safeHeight / 2;
+        break;
+      case 'left':
+        newX = Math.max(padding, currentX - moveDistance);
+        newY = currentY + (Math.random() - 0.5) * 20;
+        break;
+      case 'right':
+        newX = Math.min(padding + safeWidth, currentX + moveDistance);
+        newY = currentY + (Math.random() - 0.5) * 20;
+        break;
+      case 'up':
+        newX = currentX + (Math.random() - 0.5) * 20;
+        newY = Math.max(padding, currentY - moveDistance);
+        break;
+      case 'down':
+        newX = currentX + (Math.random() - 0.5) * 20;
+        newY = Math.min(padding + safeHeight, currentY + moveDistance);
+        break;
+    }
+
+    if (forceMove !== 'center') {
+      setCurrentDirection(forceMove);
+    }
+    setIsMoving(true);
+
+    positionX.value = withTiming(newX, { duration: 800, easing: Easing.inOut(Easing.quad) });
+    positionY.value = withTiming(newY, { duration: 800, easing: Easing.inOut(Easing.quad) }, () => {
+      runOnJS(setIsMoving)(false);
+    });
+  }, [forceMove]);
+
+  // Random movement (only when not force moving)
+  useEffect(() => {
+    if (animationState === 'sleeping' || animationState === 'dead' || forceMove) return;
+
     const moveRandomly = () => {
       const currentX = positionX.value;
       const currentY = positionY.value;
-      
-      // Calculate sprite size to ensure it stays within bounds
+
       const spriteSize = 32 * scale;
-      const padding = 8; // Extra padding from walls
-      
-      // Calculate safe movement area (excluding sprite size and padding)
+      const padding = 8;
+
       const safeWidth = bounds.width - spriteSize - (padding * 2);
       const safeHeight = bounds.height - spriteSize - (padding * 2);
-      
-      // Ensure minimum safe area
+
       const minSafeArea = spriteSize + padding;
       if (safeWidth < minSafeArea || safeHeight < minSafeArea) {
-        console.log('Bounds too small for safe movement');
         return;
       }
-      
-      // Generate new position within safe bounds
+
       const newX = padding + (Math.random() * safeWidth);
       const newY = padding + (Math.random() * safeHeight);
-      
-      // Determine direction based on movement
+
       const deltaX = newX - currentX;
       const deltaY = newY - currentY;
-      
+
       let direction: 'up' | 'down' | 'left' | 'right';
-      
-      // Use random vs straight movement decision
-      const useRandomMovement = Math.random() < 0.5; // 50% random, 50% straight
-      
-      if (useRandomMovement) {
-        // Random diagonal movement
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          direction = deltaX > 0 ? 'right' : 'left';
-        } else {
-          direction = deltaY > 0 ? 'down' : 'up';
-        }
+
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        direction = deltaX > 0 ? 'right' : 'left';
       } else {
-        // Straight line movement - pick a random cardinal direction
-        const directions: ('up' | 'down' | 'left' | 'right')[] = ['up', 'down', 'left', 'right'];
-        direction = directions[Math.floor(Math.random() * directions.length)];
+        direction = deltaY > 0 ? 'down' : 'up';
       }
-      
+
       runOnJS(setCurrentDirection)(direction);
       runOnJS(setIsMoving)(true);
-      
-      // Calculate movement duration based on distance
+
       const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-      const baseDuration = 2000; // Base 2 seconds
-      const duration = Math.max(baseDuration, distance * 10); // Scale with distance
-      
+      const duration = Math.max(2000, distance * 10);
+
       positionX.value = withTiming(newX, {
         duration: duration,
         easing: Easing.inOut(Easing.quad),
@@ -153,59 +201,24 @@ export function SpritePet({
         runOnJS(setIsMoving)(false);
       });
     };
-    
-    // Move every 4-12 seconds for more engaging movement
+
     const randomInterval = 4000 + Math.random() * 8000;
     const timeout = setTimeout(moveRandomly, randomInterval);
-    
+
     return () => clearTimeout(timeout);
-  }, [isMoving, animationState, bounds]);
-  
-  // Determine which animation to use based on state and movement
-  const getEffectiveAnimationState = (): AnimationState => {
-    // For dead state, use walking_down animation (will be rotated 90 degrees)
-    if (animationState === 'dead') {
-      // Use walking_down frames but show first frame only (not animated)
-      return animations['walking_down'] ? 'walking_down' : 'idle';
-    }
-    
-    if (animationState === 'sleeping' || animationState === 'eating' || animationState === 'happy' || animationState === 'sad') {
-      // Check if we have the specific animation, otherwise fall back to idle/walking
-      if (animations[animationState]) {
-        return animationState;
-      }
-      // Fall back to movement-based animations if we don't have the specific emotional state
-    }
-    
-    if (isMoving) {
-      return `walking_${currentDirection}` as AnimationState;
-    }
-    
-    // Fall back to any available walking animation if no idle animation
-    if (!animations['idle'] && animations['walking_down']) {
-      return 'walking_down';
-    }
-    
-    return 'idle';
-  };
-  
-  const effectiveAnimationState = getEffectiveAnimationState();
-  const effectiveAnimation = animations[effectiveAnimationState];
-  
-  // Animated style for position and rotation (for dead state)
+  }, [isMoving, animationState, bounds, forceMove]);
+
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: positionX.value },
       { translateY: positionY.value },
-      // Rotate 90 degrees when dead (laying on side)
       { rotate: animationState === 'dead' ? '90deg' : '0deg' },
     ],
   }));
-  
+
   if (!effectiveAnimation || effectiveAnimation.frames.length === 0) {
-    // Fallback: show text label above a basic pet shape
     const stateText = effectiveAnimationState.toUpperCase().replace('_', ' ');
-    
+
     return (
       <Animated.View
         style={[
@@ -218,7 +231,6 @@ export function SpritePet({
           animatedStyle,
         ]}
       >
-        {/* Text label above pet */}
         <View style={{
           backgroundColor: 'rgba(0,0,0,0.7)',
           paddingHorizontal: 8,
@@ -234,8 +246,6 @@ export function SpritePet({
             {stateText}
           </Text>
         </View>
-        
-        {/* Simple pet body */}
         <View style={{
           width: 32 * scale,
           height: 32 * scale,
@@ -247,9 +257,9 @@ export function SpritePet({
       </Animated.View>
     );
   }
-  
+
   const currentFrameSource = effectiveAnimation.frames[currentFrame % effectiveAnimation.frames.length];
-  
+
   return (
     <Animated.View
       style={[
@@ -264,7 +274,7 @@ export function SpritePet({
       <Image
         source={currentFrameSource}
         style={{
-          width: 32 * scale, // You can adjust this based on your sprite size
+          width: 32 * scale,
           height: 32 * scale,
         }}
         contentFit="contain"
@@ -273,15 +283,10 @@ export function SpritePet({
   );
 }
 
-// Helper function to create animation config
 export function createAnimation(
   frames: any[],
   frameRate: number = 8,
   loop: boolean = true
 ): AnimationConfig {
-  return {
-    frames,
-    frameRate,
-    loop,
-  };
-} 
+  return { frames, frameRate, loop };
+}

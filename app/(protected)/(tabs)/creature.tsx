@@ -30,7 +30,10 @@ import {
 export default function CreatureScreen() {
 	const { session, signOut } = useAuth();
 	const [floatingText, setFloatingText] = useState<string | null>(null);
-	const [forceAnimation, setForceAnimation] = useState<'up' | 'down' | 'left' | 'right' | 'idle' | null>(null);
+	const [forceMove, setForceMove] = useState<'up' | 'down' | 'left' | 'right' | null>(null);
+	const [forceState, setForceState] = useState<'idle' | 'happy' | 'sad' | 'eating' | 'sleeping' | 'dead' | null>(null);
+	const [testRunning, setTestRunning] = useState(false);
+	const [testLabel, setTestLabel] = useState<string | null>(null);
 
 	// Custom hooks
 	const { creature, setCreature, loading, fetchOrCreateCreature } = useCreature(session?.user.id, signOut);
@@ -299,10 +302,35 @@ export default function CreatureScreen() {
 		}
 	};
 
-	const testDirection = (direction: 'up' | 'down' | 'left' | 'right' | 'idle') => {
-		setForceAnimation(direction);
-		// Auto-reset after 3 seconds so it goes back to normal behavior
-		setTimeout(() => setForceAnimation(null), 3000);
+	const runMovementTest = async () => {
+		if (testRunning) return;
+		setTestRunning(true);
+
+		// Center pet first
+		setTestLabel('Centering...');
+		setForceMove('center' as any);
+		await new Promise(resolve => setTimeout(resolve, 1000));
+
+		// Test walking directions
+		const directions: ('left' | 'right' | 'up' | 'down')[] = ['left', 'right', 'up', 'down'];
+		for (const dir of directions) {
+			setTestLabel(`Walk: ${dir.toUpperCase()}`);
+			setForceMove(dir);
+			await new Promise(resolve => setTimeout(resolve, 3000));
+		}
+		setForceMove(null);
+
+		// Test other states
+		const states: ('idle' | 'happy' | 'sad' | 'eating' | 'sleeping' | 'dead')[] = ['idle', 'happy', 'sad', 'eating', 'sleeping', 'dead'];
+		for (const state of states) {
+			setTestLabel(`State: ${state.toUpperCase()}`);
+			setForceState(state);
+			await new Promise(resolve => setTimeout(resolve, 3500));
+		}
+
+		setForceState(null);
+		setTestLabel(null);
+		setTestRunning(false);
 	};
 
 	// Loading state
@@ -327,11 +355,7 @@ export default function CreatureScreen() {
 	}
 
 	const urgentWarnings = getUrgentWarnings(creature);
-	const baseAnimationState = getAnimationState(creature);
-	// Override with forced animation for testing, or use calculated state
-	const animationState = forceAnimation
-		? (forceAnimation === 'idle' ? 'idle' : `walking_${forceAnimation}` as any)
-		: baseAnimationState;
+	const animationState = forceState ?? getAnimationState(creature);
 
 	return (
 		<ScrollView className="flex-1 bg-background">
@@ -341,38 +365,19 @@ export default function CreatureScreen() {
 				{/* Urgent Warnings */}
 				<WarningBanner warnings={urgentWarnings} />
 
-				{/* Movement Testing Controls (Dev Only) */}
+				{/* Movement Test (Dev Only) */}
 				{__DEV__ && (
 					<View className="bg-blue-50 p-3 rounded-lg mb-3 border border-blue-200">
-						<Text className="text-center text-xs font-bold text-blue-700 mb-2">
-							🎮 Test Movement
-						</Text>
-						<View className="space-y-2">
-							{/* Up button */}
-							<View className="flex-row justify-center">
-								<Button onPress={() => testDirection('up')} variant="outline" className="px-4 py-1 border-blue-300" size="sm">
-									<Text className="text-blue-600 text-xs">⬆️</Text>
-								</Button>
-							</View>
-							{/* Left, Idle, Right buttons */}
-							<View className="flex-row justify-center space-x-2">
-								<Button onPress={() => testDirection('left')} variant="outline" className="px-4 py-1 border-blue-300" size="sm">
-									<Text className="text-blue-600 text-xs">⬅️</Text>
-								</Button>
-								<Button onPress={() => testDirection('idle')} variant="outline" className="px-4 py-1 border-gray-300" size="sm">
-									<Text className="text-gray-600 text-xs">⏹️</Text>
-								</Button>
-								<Button onPress={() => testDirection('right')} variant="outline" className="px-4 py-1 border-blue-300" size="sm">
-									<Text className="text-blue-600 text-xs">➡️</Text>
-								</Button>
-							</View>
-							{/* Down button */}
-							<View className="flex-row justify-center">
-								<Button onPress={() => testDirection('down')} variant="outline" className="px-4 py-1 border-blue-300" size="sm">
-									<Text className="text-blue-600 text-xs">⬇️</Text>
-								</Button>
-							</View>
-						</View>
+						<Button
+							onPress={runMovementTest}
+							variant="outline"
+							className="border-blue-400"
+							disabled={testRunning}
+						>
+							<Text className="text-blue-700 font-bold">
+								{testRunning ? testLabel : '🎮 Run Movement Test'}
+							</Text>
+						</Button>
 					</View>
 				)}
 
@@ -382,6 +387,7 @@ export default function CreatureScreen() {
 					animationState={animationState}
 					onPetPress={petCreature}
 					floatingText={floatingText}
+					forceMove={forceMove}
 				/>
 
 				{/* Food Counter */}

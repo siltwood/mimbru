@@ -32,9 +32,10 @@ interface PetDisplayProps {
 	animationState: 'idle' | 'walking_up' | 'walking_down' | 'walking_left' | 'walking_right' | 'happy' | 'sad' | 'eating' | 'sleeping' | 'dead';
 	onPetPress: () => void;
 	floatingText: string | null;
+	forceMove?: 'up' | 'down' | 'left' | 'right' | 'center' | null;
 }
 
-export function PetDisplay({ creature, animationState, onPetPress, floatingText }: PetDisplayProps) {
+export function PetDisplay({ creature, animationState, onPetPress, floatingText, forceMove }: PetDisplayProps) {
 	return (
 		<TouchableOpacity
 			onPress={onPetPress}
@@ -70,17 +71,6 @@ export function PetDisplay({ creature, animationState, onPetPress, floatingText 
 						require('@/assets/sprites/pet/walking/down9.png'),
 					], 12, true),
 					walking_left: createAnimation([
-						require('@/assets/sprites/pet/walking/right1.png'),
-						require('@/assets/sprites/pet/walking/right2.png'),
-						require('@/assets/sprites/pet/walking/right3.png'),
-						require('@/assets/sprites/pet/walking/right4.png'),
-						require('@/assets/sprites/pet/walking/right5.png'),
-						require('@/assets/sprites/pet/walking/right6.png'),
-						require('@/assets/sprites/pet/walking/right7.png'),
-						require('@/assets/sprites/pet/walking/right8.png'),
-						require('@/assets/sprites/pet/walking/right9.png'),
-					], 12, true),
-					walking_right: createAnimation([
 						require('@/assets/sprites/pet/walking/left1.png'),
 						require('@/assets/sprites/pet/walking/left2.png'),
 						require('@/assets/sprites/pet/walking/left3.png'),
@@ -91,15 +81,27 @@ export function PetDisplay({ creature, animationState, onPetPress, floatingText 
 						require('@/assets/sprites/pet/walking/left8.png'),
 						require('@/assets/sprites/pet/walking/left9.png'),
 					], 12, true),
+					walking_right: createAnimation([
+						require('@/assets/sprites/pet/walking/right1.png'),
+						require('@/assets/sprites/pet/walking/right2.png'),
+						require('@/assets/sprites/pet/walking/right3.png'),
+						require('@/assets/sprites/pet/walking/right4.png'),
+						require('@/assets/sprites/pet/walking/right5.png'),
+						require('@/assets/sprites/pet/walking/right6.png'),
+						require('@/assets/sprites/pet/walking/right7.png'),
+						require('@/assets/sprites/pet/walking/right8.png'),
+						require('@/assets/sprites/pet/walking/right9.png'),
+					], 12, true),
 					// Fallback to colored squares for other states until we add more sprites
 				}}
 				scale={3}
 				bounds={{
-					x: 24, // Account for 4px border + padding
+					x: 24,
 					y: 24,
-					width: screenWidth - 80, // Account for borders (4px each side) + margins (16px each side) + padding
-					height: 282, // Account for borders (4px each side) + padding
+					width: screenWidth - 80,
+					height: 282,
 				}}
+				forceMove={forceMove}
 			/>
 
 			{/* Poop Display */}
@@ -114,11 +116,31 @@ export function PetDisplay({ creature, animationState, onPetPress, floatingText 
 				</View>
 			)}
 
-			{/* Passed Out Pet Message */}
-			{creature.is_dead && (
+			{/* State Indicators */}
+			{animationState === 'dead' && (
 				<View className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-100 px-3 py-2 rounded-lg border-2 border-red-300">
 					<Text className="text-sm font-bold text-red-800 text-center">😵 Passed Out!</Text>
 					<Text className="text-xs text-red-700 text-center">Feed to revive or complete habits</Text>
+				</View>
+			)}
+			{animationState === 'happy' && (
+				<View className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-pink-100 px-3 py-2 rounded-lg border-2 border-pink-300">
+					<Text className="text-sm font-bold text-pink-800 text-center">💖 Happy!</Text>
+				</View>
+			)}
+			{animationState === 'sad' && (
+				<View className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-blue-100 px-3 py-2 rounded-lg border-2 border-blue-300">
+					<Text className="text-sm font-bold text-blue-800 text-center">😢 Sad</Text>
+				</View>
+			)}
+			{animationState === 'eating' && (
+				<View className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-100 px-3 py-2 rounded-lg border-2 border-green-300">
+					<Text className="text-sm font-bold text-green-800 text-center">🍎 Hungry!</Text>
+				</View>
+			)}
+			{animationState === 'sleeping' && (
+				<View className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-purple-100 px-3 py-2 rounded-lg border-2 border-purple-300">
+					<Text className="text-sm font-bold text-purple-800 text-center">💤 Sleeping</Text>
 				</View>
 			)}
 

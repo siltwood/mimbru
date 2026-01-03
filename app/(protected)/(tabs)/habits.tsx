@@ -143,8 +143,20 @@ export default function HabitsScreen() {
 
 			if (creature) {
 				const streakBonus = getStreakBonus(newStreak);
-				const newHappiness = Math.min(100, creature.happiness + HABIT_COMPLETION_EFFECTS.BASE_HAPPINESS + streakBonus);
-				const newHealth = Math.min(100, creature.health + HABIT_COMPLETION_EFFECTS.BASE_HEALTH + streakBonus);
+
+				// Calculate new stats with bonus
+				let newHappiness = Math.min(100, creature.happiness + HABIT_COMPLETION_EFFECTS.BASE_HAPPINESS + streakBonus);
+				let newHealth = Math.min(100, creature.health + HABIT_COMPLETION_EFFECTS.BASE_HEALTH + streakBonus);
+				let newHunger = creature.hunger;
+
+				// Ensure minimum floors after habit completion - pet shouldn't feel like shit after checking in
+				const MIN_HEALTH = 60;
+				const MIN_HAPPINESS = 70;
+				const MIN_HUNGER = 50;
+
+				newHealth = Math.max(newHealth, MIN_HEALTH);
+				newHappiness = Math.max(newHappiness, MIN_HAPPINESS);
+				newHunger = Math.max(newHunger, MIN_HUNGER);
 
 				// Award food for completing habits
 				const foodReward = getFoodReward(newStreak);
@@ -153,6 +165,7 @@ export default function HabitsScreen() {
 				let updates: any = {
 					happiness: newHappiness,
 					health: newHealth,
+					hunger: newHunger,
 					food_count: newFoodCount,
 					updated_at: now
 				};
