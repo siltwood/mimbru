@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { Creature } from '@/lib/types/creature';
+import { shouldShowDevControls } from '@/config/dev-config';
 
 type StatKey = 'health' | 'happiness' | 'cleanliness' | 'hunger';
 
@@ -54,7 +55,7 @@ export function DevControls({
 	onAdjustFood,
 	onResetStats,
 }: DevControlsProps) {
-	if (!__DEV__) return null;
+	if (!shouldShowDevControls()) return null;
 
 	return (
 		<View className="bg-purple-50 p-4 rounded-lg mt-6 border-2 border-purple-200">

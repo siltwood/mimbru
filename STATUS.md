@@ -1,19 +1,22 @@
 # Project Status
 
-## Currently Disabled (Dev Mode)
+## Dev Features (config/dev-config.ts)
 
-### Authentication - BYPASSED
 ```typescript
-// context/supabase-provider.tsx:18
-const TESTING_MODE = true;  // Set to false for real auth
+DEV_AUTH_BYPASS = false      // Skip login, use mock user
+DEV_SHOW_CONTROLS = true     // Show stat adjustment panel
+DEV_SHOW_MOVEMENT_TEST = true // Show movement test button
 ```
 
-### Row Level Security - DISABLED
+All features require `__DEV__` mode (auto-disabled in production).
+
+## Row Level Security - DISABLED
+
 All tables have RLS disabled for testing.
 
 ## Production Checklist
 
-1. Set `TESTING_MODE = false` in `context/supabase-provider.tsx`
+1. Set all `DEV_*` flags to `false` in `config/dev-config.ts`
 2. Enable RLS:
    ```sql
    ALTER TABLE creatures ENABLE ROW LEVEL SECURITY;

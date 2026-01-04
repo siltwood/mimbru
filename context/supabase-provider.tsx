@@ -11,12 +11,9 @@ import { Session } from "@supabase/supabase-js";
 
 import { supabase } from "@/config/supabase";
 import { CreatureDegradation } from "@/lib/creature-degradation";
+import { shouldBypassAuth, DEV_TEST_USER_ID } from "@/config/dev-config";
 
 SplashScreen.preventAutoHideAsync();
-
-// 🚧 TESTING MODE: Set to false to re-enable auth
-const TESTING_MODE = true;
-const TEST_USER_ID = 'c2ff23dd-518c-4004-ba7b-617dace033ab';
 
 type AuthState = {
 	initialized: boolean;
@@ -94,11 +91,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
 	};
 
 	useEffect(() => {
-		if (TESTING_MODE) {
-			// Create mock session for testing
+		if (shouldBypassAuth()) {
 			const mockSession = {
 				user: {
-					id: TEST_USER_ID,
+					id: DEV_TEST_USER_ID,
 					email: 'test@test.com',
 					aud: 'authenticated',
 					role: 'authenticated',
@@ -106,7 +102,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
 				access_token: 'mock-access-token',
 				refresh_token: 'mock-refresh-token',
 			} as Session;
-
 			setSession(mockSession);
 			setInitialized(true);
 			return;

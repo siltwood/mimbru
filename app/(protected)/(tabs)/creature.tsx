@@ -28,6 +28,7 @@ import {
 	clampStat,
 } from "@/lib/constants/pet-constants";
 import { Creature } from "@/lib/types/creature";
+import { shouldShowDevControls, shouldShowMovementTest } from "@/config/dev-config";
 
 export default function CreatureScreen() {
 	const { session, signOut } = useAuth();
@@ -368,7 +369,7 @@ export default function CreatureScreen() {
 				<WarningBanner warnings={urgentWarnings} />
 
 				{/* Movement Test (Dev Only) */}
-				{__DEV__ && (
+				{shouldShowMovementTest() && (
 					<View className="bg-blue-50 p-3 rounded-lg mb-3 border border-blue-200">
 						<Button
 							onPress={runMovementTest}

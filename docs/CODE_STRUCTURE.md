@@ -1,5 +1,17 @@
 # Code Structure
 
+## Dev Config
+
+All dev features controlled in `config/dev-config.ts`:
+
+```typescript
+DEV_AUTH_BYPASS       // Skip login
+DEV_SHOW_CONTROLS     // Stat adjustment panel
+DEV_SHOW_MOVEMENT_TEST // Movement test button
+```
+
+Toggle these to enable/disable dev features during development.
+
 ## Core Files
 
 ### Screens
