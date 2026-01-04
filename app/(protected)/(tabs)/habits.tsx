@@ -12,6 +12,7 @@ import {
 	getStreakEmoji,
 	getStreakBonus,
 } from "@/lib/constants/pet-constants";
+import { Creature } from "@/lib/types/creature";
 
 type Habit = {
 	id: string;
@@ -134,6 +135,9 @@ export default function HabitsScreen() {
 
 			if (error) throw error;
 
+			// Calculate food reward based on streak (used for both DB update and alert)
+			const foodReward = getFoodReward(newStreak);
+
 			// Boost pet stats
 			const { data: creature } = await supabase
 				.from("creatures")
@@ -158,11 +162,9 @@ export default function HabitsScreen() {
 				newHappiness = Math.max(newHappiness, MIN_HAPPINESS);
 				newHunger = Math.max(newHunger, MIN_HUNGER);
 
-				// Award food for completing habits
-				const foodReward = getFoodReward(newStreak);
 				const newFoodCount = creature.food_count + foodReward;
 
-				let updates: any = {
+				const updates: Partial<Creature> & { updated_at: string } = {
 					happiness: newHappiness,
 					health: newHealth,
 					hunger: newHunger,
@@ -197,7 +199,6 @@ export default function HabitsScreen() {
 			));
 
 			// Enhanced completion message with food reward info
-			const foodReward = getFoodReward(newStreak);
 			const revivalMessage = creature?.is_dead ? "\n🌟 Your pet has been revived!" : "";
 			
 			Alert.alert(

@@ -2,34 +2,13 @@ import React from 'react';
 import { View, TouchableOpacity, Dimensions } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { SpritePet, createAnimation } from '@/components/sprite-pet';
+import { Creature, AnimationState } from '@/lib/types/creature';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-type Creature = {
-	id: string;
-	user_id: string;
-	health: number;
-	happiness: number;
-	cleanliness: number;
-	hunger: number;
-	level: number;
-	name: string;
-	is_dead: boolean;
-	last_fed: string;
-	last_cleaned: string;
-	poop_count: number;
-	current_animation: string;
-	created_at: string;
-	updated_at: string;
-	last_poop_time: string | null;
-	last_pet_time: string | null;
-	last_health_decay: string | null;
-	food_count: number;
-};
-
 interface PetDisplayProps {
 	creature: Creature;
-	animationState: 'idle' | 'walking_up' | 'walking_down' | 'walking_left' | 'walking_right' | 'happy' | 'sad' | 'eating' | 'sleeping' | 'dead';
+	animationState: AnimationState;
 	onPetPress: () => void;
 	floatingText: string | null;
 	forceMove?: 'up' | 'down' | 'left' | 'right' | 'center' | null;

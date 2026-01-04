@@ -6,20 +6,7 @@ import {
 	PET_EFFECTS,
 	clampStat,
 } from '@/lib/constants/pet-constants';
-
-type Creature = {
-	id: string;
-	user_id: string;
-	health: number;
-	happiness: number;
-	cleanliness: number;
-	hunger: number;
-	is_dead: boolean;
-	food_count: number;
-	poop_count: number;
-	last_pet_time: string | null;
-	[key: string]: any;
-};
+import { Creature } from '@/lib/types/creature';
 
 export function useCreatureActions(
 	userId: string | undefined,

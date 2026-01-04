@@ -2,22 +2,46 @@ import React from 'react';
 import { View } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { Creature } from '@/lib/types/creature';
 
-type Creature = {
-	id: string;
-	health: number;
-	happiness: number;
-	cleanliness: number;
-	hunger: number;
-	food_count: number;
-	[key: string]: any;
-};
+type StatKey = 'health' | 'happiness' | 'cleanliness' | 'hunger';
+
+interface StatControlProps {
+	label: string;
+	emoji: string;
+	stat: StatKey;
+	value: number;
+	onAdjust: (stat: StatKey, delta: number) => void;
+}
+
+function StatControl({ label, emoji, stat, value, onAdjust }: StatControlProps) {
+	return (
+		<View className="flex-row items-center justify-between">
+			<Text className="text-sm font-medium text-purple-700 w-20">{emoji} {label}</Text>
+			<View className="flex-row space-x-2">
+				<Button onPress={() => onAdjust(stat, -20)} variant="outline" className="px-3 py-1 border-red-300">
+					<Text className="text-red-600 text-xs">-20</Text>
+				</Button>
+				<Button onPress={() => onAdjust(stat, -10)} variant="outline" className="px-3 py-1 border-red-300">
+					<Text className="text-red-600 text-xs">-10</Text>
+				</Button>
+				<Text className="text-sm font-bold text-purple-800 w-10 text-center">{value}</Text>
+				<Button onPress={() => onAdjust(stat, 10)} variant="outline" className="px-3 py-1 border-green-300">
+					<Text className="text-green-600 text-xs">+10</Text>
+				</Button>
+				<Button onPress={() => onAdjust(stat, 20)} variant="outline" className="px-3 py-1 border-green-300">
+					<Text className="text-green-600 text-xs">+20</Text>
+				</Button>
+			</View>
+		</View>
+	);
+}
 
 interface DevControlsProps {
 	creature: Creature;
 	onForcePoop: () => void;
 	onForceFaint: () => void;
-	onAdjustStat: (stat: 'health' | 'happiness' | 'cleanliness' | 'hunger', delta: number) => void;
+	onAdjustStat: (stat: StatKey, delta: number) => void;
 	onAdjustFood: (delta: number) => void;
 	onResetStats: () => void;
 }
@@ -50,85 +74,10 @@ export function DevControls({
 
 			{/* Stat Adjustments */}
 			<View className="space-y-3">
-				{/* Health Controls */}
-				<View className="flex-row items-center justify-between">
-					<Text className="text-sm font-medium text-purple-700 w-20">❤️ Health</Text>
-					<View className="flex-row space-x-2">
-						<Button onPress={() => onAdjustStat('health', -20)} variant="outline" className="px-3 py-1 border-red-300">
-							<Text className="text-red-600 text-xs">-20</Text>
-						</Button>
-						<Button onPress={() => onAdjustStat('health', -10)} variant="outline" className="px-3 py-1 border-red-300">
-							<Text className="text-red-600 text-xs">-10</Text>
-						</Button>
-						<Text className="text-sm font-bold text-purple-800 w-10 text-center">{creature.health}</Text>
-						<Button onPress={() => onAdjustStat('health', 10)} variant="outline" className="px-3 py-1 border-green-300">
-							<Text className="text-green-600 text-xs">+10</Text>
-						</Button>
-						<Button onPress={() => onAdjustStat('health', 20)} variant="outline" className="px-3 py-1 border-green-300">
-							<Text className="text-green-600 text-xs">+20</Text>
-						</Button>
-					</View>
-				</View>
-
-				{/* Happiness Controls */}
-				<View className="flex-row items-center justify-between">
-					<Text className="text-sm font-medium text-purple-700 w-20">😊 Happy</Text>
-					<View className="flex-row space-x-2">
-						<Button onPress={() => onAdjustStat('happiness', -20)} variant="outline" className="px-3 py-1 border-red-300">
-							<Text className="text-red-600 text-xs">-20</Text>
-						</Button>
-						<Button onPress={() => onAdjustStat('happiness', -10)} variant="outline" className="px-3 py-1 border-red-300">
-							<Text className="text-red-600 text-xs">-10</Text>
-						</Button>
-						<Text className="text-sm font-bold text-purple-800 w-10 text-center">{creature.happiness}</Text>
-						<Button onPress={() => onAdjustStat('happiness', 10)} variant="outline" className="px-3 py-1 border-green-300">
-							<Text className="text-green-600 text-xs">+10</Text>
-						</Button>
-						<Button onPress={() => onAdjustStat('happiness', 20)} variant="outline" className="px-3 py-1 border-green-300">
-							<Text className="text-green-600 text-xs">+20</Text>
-						</Button>
-					</View>
-				</View>
-
-				{/* Cleanliness Controls */}
-				<View className="flex-row items-center justify-between">
-					<Text className="text-sm font-medium text-purple-700 w-20">🧼 Clean</Text>
-					<View className="flex-row space-x-2">
-						<Button onPress={() => onAdjustStat('cleanliness', -20)} variant="outline" className="px-3 py-1 border-red-300">
-							<Text className="text-red-600 text-xs">-20</Text>
-						</Button>
-						<Button onPress={() => onAdjustStat('cleanliness', -10)} variant="outline" className="px-3 py-1 border-red-300">
-							<Text className="text-red-600 text-xs">-10</Text>
-						</Button>
-						<Text className="text-sm font-bold text-purple-800 w-10 text-center">{creature.cleanliness}</Text>
-						<Button onPress={() => onAdjustStat('cleanliness', 10)} variant="outline" className="px-3 py-1 border-green-300">
-							<Text className="text-green-600 text-xs">+10</Text>
-						</Button>
-						<Button onPress={() => onAdjustStat('cleanliness', 20)} variant="outline" className="px-3 py-1 border-green-300">
-							<Text className="text-green-600 text-xs">+20</Text>
-						</Button>
-					</View>
-				</View>
-
-				{/* Hunger Controls */}
-				<View className="flex-row items-center justify-between">
-					<Text className="text-sm font-medium text-purple-700 w-20">🍎 Hunger</Text>
-					<View className="flex-row space-x-2">
-						<Button onPress={() => onAdjustStat('hunger', -20)} variant="outline" className="px-3 py-1 border-red-300">
-							<Text className="text-red-600 text-xs">-20</Text>
-						</Button>
-						<Button onPress={() => onAdjustStat('hunger', -10)} variant="outline" className="px-3 py-1 border-red-300">
-							<Text className="text-red-600 text-xs">-10</Text>
-						</Button>
-						<Text className="text-sm font-bold text-purple-800 w-10 text-center">{creature.hunger}</Text>
-						<Button onPress={() => onAdjustStat('hunger', 10)} variant="outline" className="px-3 py-1 border-green-300">
-							<Text className="text-green-600 text-xs">+10</Text>
-						</Button>
-						<Button onPress={() => onAdjustStat('hunger', 20)} variant="outline" className="px-3 py-1 border-green-300">
-							<Text className="text-green-600 text-xs">+20</Text>
-						</Button>
-					</View>
-				</View>
+				<StatControl label="Health" emoji="❤️" stat="health" value={creature.health} onAdjust={onAdjustStat} />
+				<StatControl label="Happy" emoji="😊" stat="happiness" value={creature.happiness} onAdjust={onAdjustStat} />
+				<StatControl label="Clean" emoji="🧼" stat="cleanliness" value={creature.cleanliness} onAdjust={onAdjustStat} />
+				<StatControl label="Hunger" emoji="🍎" stat="hunger" value={creature.hunger} onAdjust={onAdjustStat} />
 			</View>
 
 			{/* Food Controls */}

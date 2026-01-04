@@ -2,18 +2,10 @@ import {
 	DEGRADATION_THRESHOLDS,
 	WARNING_THRESHOLDS,
 } from '@/lib/constants/pet-constants';
-
-type Creature = {
-	health: number;
-	happiness: number;
-	cleanliness: number;
-	hunger: number;
-	is_dead: boolean;
-	poop_count: number;
-};
+import { Creature, AnimationState } from '@/lib/types/creature';
 
 export function useCreatureHelpers() {
-	const getAnimationState = (creature: Creature) => {
+	const getAnimationState = (creature: Creature): AnimationState => {
 		if (creature.is_dead) return 'dead'; // Passed out state
 		if (creature.health < DEGRADATION_THRESHOLDS.LOW_STAT || creature.happiness < DEGRADATION_THRESHOLDS.LOW_STAT) return 'sad';
 		if (creature.happiness > 80) return 'happy';

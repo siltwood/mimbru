@@ -53,7 +53,6 @@ export class CreatureDegradation {
 				.single();
 
 			if (error || !creature) {
-				console.log("No creature found for degradation");
 				return;
 			}
 
@@ -174,7 +173,7 @@ export class CreatureDegradation {
 					})
 					.eq("id", creature.id);
 
-				// Log the degradation
+				// Log the degradation to pet_actions table
 				if (healthChange !== 0 || happinessChange !== 0) {
 					await supabase.from("pet_actions").insert([
 						{
@@ -187,8 +186,6 @@ export class CreatureDegradation {
 						}
 					]);
 				}
-
-				console.log(`Creature degraded: H${healthChange} Ha${happinessChange} C${cleanlinessChange} Hu${hungerChange} (${completedHabitsToday}/${totalHabits} habits)`);
 			}
 
 		} catch (error) {

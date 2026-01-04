@@ -1,29 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Alert } from 'react-native';
 import { supabase } from '@/config/supabase';
 import { INITIAL_CREATURE } from '@/lib/constants/pet-constants';
-
-type Creature = {
-	id: string;
-	user_id: string;
-	health: number;
-	happiness: number;
-	cleanliness: number;
-	hunger: number;
-	level: number;
-	name: string;
-	is_dead: boolean;
-	last_fed: string;
-	last_cleaned: string;
-	poop_count: number;
-	current_animation: string;
-	created_at: string;
-	updated_at: string;
-	last_poop_time: string | null;
-	last_pet_time: string | null;
-	last_health_decay: string | null;
-	food_count: number;
-};
+import { Creature } from '@/lib/types/creature';
 
 export function useCreature(userId: string | undefined, signOut: () => Promise<void>) {
 	const [creature, setCreature] = useState<Creature | null>(null);
@@ -88,12 +67,12 @@ export function useCreature(userId: string | undefined, signOut: () => Promise<v
 				// If creation fails due to unique constraint (user already has a creature),
 				// try to fetch the existing creature instead
 				if (error.code === '23505') { // PostgreSQL unique violation error
-					console.log("Creature already exists for user, fetching existing one...");
+					if (__DEV__) console.log("Creature already exists for user, fetching existing one...");
 					await fetchOrCreateCreature();
 				}
 				// If user doesn't exist (orphaned session), sign out
 				else if (error.code === '23503' && error.message.includes('user_id')) {
-					console.log("User no longer exists, signing out...");
+					if (__DEV__) console.log("User no longer exists, signing out...");
 					Alert.alert(
 						"Account Not Found",
 						"Your account was deleted. Please sign in again.",

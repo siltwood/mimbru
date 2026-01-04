@@ -4,7 +4,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { supabase } from "@/config/supabase";
 import { useAuth } from "@/context/supabase-provider";
 import { Text } from "@/components/ui/text";
-import { H1, Muted } from "@/components/ui/typography";
+import { H1 } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 
 // New Components
@@ -25,7 +25,9 @@ import {
 	HEALTH_DECAY,
 	TIME_INTERVALS,
 	INITIAL_CREATURE,
+	clampStat,
 } from "@/lib/constants/pet-constants";
+import { Creature } from "@/lib/types/creature";
 
 export default function CreatureScreen() {
 	const { session, signOut } = useAuth();
@@ -75,7 +77,7 @@ export default function CreatureScreen() {
 		if (!creature || creature.is_dead) return;
 
 		const now = new Date();
-		const updates: any = {};
+		const updates: Partial<Creature> = {};
 		let needsUpdate = false;
 
 		// Check for daily poop generation
@@ -109,8 +111,8 @@ export default function CreatureScreen() {
 
 			if (!hasRecentHabitActivity) {
 				// Base decay amounts
-				let healthDecay = HEALTH_DECAY.BASE_HEALTH_LOSS;
-				let happinessDecay = HEALTH_DECAY.BASE_HAPPINESS_LOSS;
+				let healthDecay: number = HEALTH_DECAY.BASE_HEALTH_LOSS;
+				let happinessDecay: number = HEALTH_DECAY.BASE_HAPPINESS_LOSS;
 
 				// Increased decay when surrounded by poop (toxic environment)
 				if (creature.poop_count >= POOP_SYSTEM.TOXIC_THRESHOLD) {
@@ -218,8 +220,8 @@ export default function CreatureScreen() {
 	const adjustStat = async (stat: 'health' | 'happiness' | 'cleanliness' | 'hunger', delta: number) => {
 		if (!creature) return;
 
-		const newValue = Math.max(0, Math.min(100, creature[stat] + delta));
-		const updates: any = {
+		const newValue = clampStat(creature[stat] + delta);
+		const updates: Partial<typeof creature> & { updated_at: string } = {
 			[stat]: newValue,
 			updated_at: new Date().toISOString()
 		};

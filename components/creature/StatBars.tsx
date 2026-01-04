@@ -2,6 +2,36 @@ import React from 'react';
 import { View } from 'react-native';
 import { Text } from '@/components/ui/text';
 
+interface StatBarProps {
+	label: string;
+	emoji: string;
+	value: number;
+	barColor: string;
+}
+
+function StatBar({ label, emoji, value, barColor }: StatBarProps) {
+	const getStatusColor = (val: number) => {
+		if (val >= 70) return "text-green-500";
+		if (val >= 40) return "text-yellow-500";
+		return "text-red-500";
+	};
+
+	return (
+		<View className="flex-row items-center">
+			<Text className="text-sm w-20">{emoji} {label}</Text>
+			<View className="flex-1 h-3 bg-gray-200 rounded-full mx-3">
+				<View
+					className={`h-3 ${barColor} rounded-full`}
+					style={{ width: `${value}%` }}
+				/>
+			</View>
+			<Text className={`text-sm w-12 text-right ${getStatusColor(value)}`}>
+				{value}%
+			</Text>
+		</View>
+	);
+}
+
 interface StatBarsProps {
 	health: number;
 	happiness: number;
@@ -10,69 +40,12 @@ interface StatBarsProps {
 }
 
 export function StatBars({ health, happiness, cleanliness, hunger }: StatBarsProps) {
-	const getStatusColor = (value: number) => {
-		if (value >= 70) return "text-green-500";
-		if (value >= 40) return "text-yellow-500";
-		return "text-red-500";
-	};
-
 	return (
 		<View className="mb-4 space-y-2">
-			{/* Health Bar */}
-			<View className="flex-row items-center">
-				<Text className="text-sm w-20">❤️ Health</Text>
-				<View className="flex-1 h-3 bg-gray-200 rounded-full mx-3">
-					<View
-						className="h-3 bg-red-500 rounded-full"
-						style={{ width: `${health}%` }}
-					/>
-				</View>
-				<Text className={`text-sm w-12 text-right ${getStatusColor(health)}`}>
-					{health}%
-				</Text>
-			</View>
-
-			{/* Happiness Bar */}
-			<View className="flex-row items-center">
-				<Text className="text-sm w-20">😊 Happy</Text>
-				<View className="flex-1 h-3 bg-gray-200 rounded-full mx-3">
-					<View
-						className="h-3 bg-yellow-500 rounded-full"
-						style={{ width: `${happiness}%` }}
-					/>
-				</View>
-				<Text className={`text-sm w-12 text-right ${getStatusColor(happiness)}`}>
-					{happiness}%
-				</Text>
-			</View>
-
-			{/* Cleanliness Bar */}
-			<View className="flex-row items-center">
-				<Text className="text-sm w-20">🧼 Clean</Text>
-				<View className="flex-1 h-3 bg-gray-200 rounded-full mx-3">
-					<View
-						className="h-3 bg-blue-500 rounded-full"
-						style={{ width: `${cleanliness}%` }}
-					/>
-				</View>
-				<Text className={`text-sm w-12 text-right ${getStatusColor(cleanliness)}`}>
-					{cleanliness}%
-				</Text>
-			</View>
-
-			{/* Hunger Bar */}
-			<View className="flex-row items-center">
-				<Text className="text-sm w-20">🍎 Hunger</Text>
-				<View className="flex-1 h-3 bg-gray-200 rounded-full mx-3">
-					<View
-						className="h-3 bg-green-500 rounded-full"
-						style={{ width: `${hunger}%` }}
-					/>
-				</View>
-				<Text className={`text-sm w-12 text-right ${getStatusColor(hunger)}`}>
-					{hunger}%
-				</Text>
-			</View>
+			<StatBar label="Health" emoji="❤️" value={health} barColor="bg-red-500" />
+			<StatBar label="Happy" emoji="😊" value={happiness} barColor="bg-yellow-500" />
+			<StatBar label="Clean" emoji="🧼" value={cleanliness} barColor="bg-blue-500" />
+			<StatBar label="Hunger" emoji="🍎" value={hunger} barColor="bg-green-500" />
 		</View>
 	);
 }
