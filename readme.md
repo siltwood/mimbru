@@ -42,6 +42,11 @@ All values configurable in `lib/constants/pet-constants.ts`.
 
 Dev controls appear automatically in `__DEV__` mode for testing stats/states.
 
+## Documentation
+
+- [Game Mechanics](docs/GAME_MECHANICS.md) - How the pet works, stats, actions, economy
+- [Code Structure](docs/CODE_STRUCTURE.md) - Architecture, key files, data flow
+
 ## Production
 
 See `STATUS.md` for what to enable before deploying.
