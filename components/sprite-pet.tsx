@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Dimensions, Text } from 'react-native';
+import { View, Dimensions, Text, ImageSourcePropType } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -8,13 +8,12 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { Image } from 'expo-image';
+import { AnimationState } from '@/lib/types/creature';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-type AnimationState = 'idle' | 'walking_up' | 'walking_down' | 'walking_left' | 'walking_right' | 'happy' | 'sad' | 'eating' | 'sleeping' | 'dead';
-
 interface AnimationConfig {
-  frames: any[];
+  frames: ImageSourcePropType[];
   frameRate: number;
   loop: boolean;
 }
@@ -284,7 +283,7 @@ export function SpritePet({
 }
 
 export function createAnimation(
-  frames: any[],
+  frames: ImageSourcePropType[],
   frameRate: number = 8,
   loop: boolean = true
 ): AnimationConfig {

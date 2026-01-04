@@ -28,7 +28,7 @@ export function useCreatureActions(
 		let newHealth = creature.health;
 
 		// If pet is dead, revive it with feeding
-		let updates: any = {
+		const updates: Partial<Creature> & { updated_at: string } = {
 			hunger: newHunger,
 			happiness: newHappiness,
 			food_count: creature.food_count - 1, // Consume 1 food
