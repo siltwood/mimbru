@@ -13,6 +13,7 @@ import { StatBars } from "@/components/creature/StatBars";
 import { ActionButtons } from "@/components/creature/ActionButtons";
 import { WarningBanner } from "@/components/creature/WarningBanner";
 import { DevControls } from "@/components/creature/DevControls";
+import { NamePetModal } from "@/components/creature/NamePetModal";
 
 // New Hooks
 import { useCreature } from "@/lib/hooks/useCreature";
@@ -37,6 +38,7 @@ export default function CreatureScreen() {
 	const [forceState, setForceState] = useState<'idle' | 'happy' | 'sad' | 'eating' | 'sleeping' | 'dead' | null>(null);
 	const [testRunning, setTestRunning] = useState(false);
 	const [testLabel, setTestLabel] = useState<string | null>(null);
+	const [showNameModal, setShowNameModal] = useState(false);
 
 	// Custom hooks
 	const { creature, setCreature, loading, fetchOrCreateCreature } = useCreature(session?.user.id, signOut);
@@ -59,6 +61,31 @@ export default function CreatureScreen() {
 			fetchOrCreateCreature();
 		}
 	}, [session]);
+
+	// Show naming modal for new pets with default name
+	useEffect(() => {
+		if (creature && creature.name === "Habito") {
+			setShowNameModal(true);
+		}
+	}, [creature?.id]);
+
+	const renamePet = async (newName: string) => {
+		if (!creature) return;
+
+		try {
+			const { error } = await supabase
+				.from("creatures")
+				.update({ name: newName })
+				.eq("id", creature.id);
+
+			if (!error) {
+				setCreature({ ...creature, name: newName });
+				setShowNameModal(false);
+			}
+		} catch (err) {
+			console.error("Error renaming pet:", err);
+		}
+	};
 
 	// Refresh creature data when screen comes into focus and check for decay
 	useFocusEffect(
@@ -468,6 +495,12 @@ export default function CreatureScreen() {
 					</Button>
 				</View>
 			</View>
+
+			{/* Name Pet Modal */}
+			<NamePetModal
+				visible={showNameModal}
+				onSubmit={renamePet}
+			/>
 		</ScrollView>
 	);
 }
