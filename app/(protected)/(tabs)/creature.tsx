@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Alert, ScrollView } from "react-native";
+import { View, Alert, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { supabase } from "@/config/supabase";
 import { useAuth } from "@/context/supabase-provider";
@@ -39,6 +39,7 @@ export default function CreatureScreen() {
 	const [testRunning, setTestRunning] = useState(false);
 	const [testLabel, setTestLabel] = useState<string | null>(null);
 	const [showNameModal, setShowNameModal] = useState(false);
+	const [isRenaming, setIsRenaming] = useState(false);
 
 	// Custom hooks
 	const { creature, setCreature, loading, fetchOrCreateCreature } = useCreature(session?.user.id, signOut);
@@ -65,9 +66,20 @@ export default function CreatureScreen() {
 	// Show naming modal for new pets with default name
 	useEffect(() => {
 		if (creature && creature.name === "Habito") {
+			setIsRenaming(false);
 			setShowNameModal(true);
 		}
 	}, [creature?.id]);
+
+	const openRenameModal = () => {
+		setIsRenaming(true);
+		setShowNameModal(true);
+	};
+
+	const closeRenameModal = () => {
+		setShowNameModal(false);
+		setIsRenaming(false);
+	};
 
 	const renamePet = async (newName: string) => {
 		if (!creature) return;
@@ -80,7 +92,7 @@ export default function CreatureScreen() {
 
 			if (!error) {
 				setCreature({ ...creature, name: newName });
-				setShowNameModal(false);
+				closeRenameModal();
 			}
 		} catch (err) {
 			console.error("Error renaming pet:", err);
@@ -366,8 +378,9 @@ export default function CreatureScreen() {
 	// Loading state
 	if (loading) {
 		return (
-			<View className="flex-1 items-center justify-center bg-background">
-				<Text>Loading your pet...</Text>
+			<View className="flex-1 items-center justify-center bg-background gap-4">
+				<ActivityIndicator size="large" color="#8B5CF6" />
+				<Text className="text-gray-500">Loading your pet...</Text>
 			</View>
 		);
 	}
@@ -390,7 +403,10 @@ export default function CreatureScreen() {
 	return (
 		<ScrollView className="flex-1 bg-background">
 			<View className="p-4">
-				<H1 className="text-center mb-4">🐾 {creature.name || "Your Pet"}</H1>
+				<TouchableOpacity onPress={openRenameModal} activeOpacity={0.7}>
+					<H1 className="text-center mb-4">🐾 {creature.name || "Your Pet"}</H1>
+					<Text className="text-center text-xs text-gray-400 -mt-3 mb-2">tap to rename</Text>
+				</TouchableOpacity>
 
 				{/* Urgent Warnings */}
 				<WarningBanner warnings={urgentWarnings} />
@@ -499,7 +515,10 @@ export default function CreatureScreen() {
 			{/* Name Pet Modal */}
 			<NamePetModal
 				visible={showNameModal}
+				currentName={creature.name}
+				isRename={isRenaming}
 				onSubmit={renamePet}
+				onCancel={closeRenameModal}
 			/>
 		</ScrollView>
 	);

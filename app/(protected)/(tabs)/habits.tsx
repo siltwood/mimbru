@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Alert, ScrollView, TextInput, TouchableOpacity } from "react-native";
+import { View, Alert, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { supabase } from "@/config/supabase";
 import { useAuth } from "@/context/supabase-provider";
@@ -250,8 +250,9 @@ export default function HabitsScreen() {
 
 	if (loading) {
 		return (
-			<View className="flex-1 items-center justify-center bg-background">
-				<Text>Loading...</Text>
+			<View className="flex-1 items-center justify-center bg-background gap-4">
+				<ActivityIndicator size="large" color="#8B5CF6" />
+				<Text className="text-gray-500">Loading habits...</Text>
 			</View>
 		);
 	}

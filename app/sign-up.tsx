@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, Alert } from "react-native";
 import * as z from "zod";
 
 import { SafeAreaView } from "@/components/safe-area-view";
@@ -38,10 +38,9 @@ export default function SignUp() {
 	async function onSubmit(data: z.infer<typeof formSchema>) {
 		try {
 			await signUp(data.email, data.password);
-
 			form.reset();
 		} catch (error: Error | any) {
-			console.error(error.message);
+			Alert.alert("Sign Up", error.message);
 		}
 	}
 

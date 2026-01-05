@@ -45,15 +45,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
 		});
 
 		if (error) {
-			console.error("Error signing up:", error);
-			return;
+			throw new Error(error.message);
 		}
 
 		if (data.session) {
 			setSession(data.session);
-			console.log("User signed up:", data.user);
-		} else {
-			console.log("No user returned from sign up");
+		} else if (data.user && !data.session) {
+			// Email confirmation required
+			throw new Error("Please check your email to confirm your account.");
 		}
 	};
 
@@ -64,15 +63,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
 		});
 
 		if (error) {
-			console.error("Error signing in:", error);
-			return;
+			throw new Error(error.message);
 		}
 
 		if (data.session) {
 			setSession(data.session);
-			console.log("User signed in:", data.user);
-		} else {
-			console.log("No user returned from sign in");
 		}
 	};
 

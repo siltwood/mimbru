@@ -27,11 +27,13 @@ export default function TabsLayout() {
 			initialRouteName="creature"
 		>
 			<Tabs.Screen
-				name="creature" 
-				options={{ 
-					title: "🐾 Pet",
-					tabBarLabel: "Pet"
-				}} 
+				name="creature"
+				options={{
+					title: "Pet",
+					tabBarIcon: ({ color }) => (
+						<Text style={{ color, fontSize: 20 }}>🐾</Text>
+					),
+				}}
 			/>
 			<Tabs.Screen
 				name="habits"
